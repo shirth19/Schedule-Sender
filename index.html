@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Sender</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Schedule Sender</h1>
+        <p class="subtitle">Click and drag to select the times you're free!</p>
+        
+        <div class="time-range-selector">
+            <div class="time-input">
+                <label for="start-time">Start Time:</label>
+                <select id="start-time"></select>
+            </div>
+            <div class="time-input">
+                <label for="end-time">End Time:</label>
+                <select id="end-time"></select>
+            </div>
+            <div class="mode-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="mode-switch">
+                    <span class="slider"></span>
+                </label>
+                <span id="mode-label">Free Times</span>
+            </div>
+            <button id="update-range" class="secondary-btn">Update Time Range</button>
+        </div>
+
+        <div class="calendar-container">
+            <div class="week-display">
+                <button id="prev-week" class="week-nav">←</button>
+                <div class="date-selector">
+                    <input type="date" id="date-picker" class="date-input">
+                    <span id="week-range">Loading...</span>
+                </div>
+                <button id="next-week" class="week-nav">→</button>
+            </div>
+            <div class="grid-wrapper">
+                <div class="corner-spacer"></div>
+                <div class="weekday-labels">
+                    <div class="weekday">Mon</div>
+                    <div class="weekday">Tue</div>
+                    <div class="weekday">Wed</div>
+                    <div class="weekday">Thu</div>
+                    <div class="weekday">Fri</div>
+                    <div class="weekday">Sat</div>
+                    <div class="weekday">Sun</div>
+                </div>
+                <div class="time-labels"></div>
+                <div class="time-grid"></div>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <canvas id="calendar-canvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="button-container">
+                <button id="generate-btn" class="primary-btn">Generate Calendar</button>
+                <button id="download-btn" class="secondary-btn">Download Calendar</button>
+                <button id="copy-btn" class="secondary-btn">Copy to Clipboard</button>
+                <button id="clear-btn" class="secondary-btn">Clear Selection</button>
+                <div class="weekend-toggle">
+                    <input type="checkbox" id="show-weekends" checked>
+                    <label for="show-weekends">Show Weekends</label>
+                </div>
+                <div class="past-days-toggle">
+                    <input type="checkbox" id="gray-past-days" checked>
+                    <label for="gray-past-days">Gray Out Past Days</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="feedback-section">
+        <h3>Have a suggestion or found an issue?</h3>
+        <div class="feedback-form">
+            <form action="https://formsubmit.co/sam.hirth19@gmail.com" method="POST">
+                <textarea name="feedback" id="feedback-text" placeholder="Enter your feedback here..." rows="4" required></textarea>
+                <input type="email" name="email" id="feedback-email" placeholder="Your email (optional - if you'd like a response)" />
+                <input type="hidden" name="_next" value="http://localhost:8000">
+                <input type="hidden" name="_subject" value="Calendar App Feedback">
+                <button type="submit" id="send-feedback" class="primary-btn">Send Feedback</button>
+                <p class="feedback-note">Your feedback will be sent anonymously unless you provide an email.</p>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
