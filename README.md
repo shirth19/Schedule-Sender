@@ -22,4 +22,4 @@ A simple, elegant web application for creating and sharing weekly schedules. Per
 
 ## Live Demo
 
-Visit the live site at: [https://samhirth.github.io/schedule-sender/](https://samhirth.github.io/schedule-sender/)
+Visit the live site at: [https://shirth19.github.io/Schedule-Sender/](https://shirth19.github.io/Schedule-Sender/)
