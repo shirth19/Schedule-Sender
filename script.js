@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas: document.getElementById('calendar-canvas'),
         startTimeSelect: document.getElementById('start-time'),
         endTimeSelect: document.getElementById('end-time'),
-        updateRangeBtn: document.getElementById('update-range'),
+        resetBtn: document.getElementById('reset-all'),
         weekRange: document.getElementById('week-range'),
         prevWeekBtn: document.getElementById('prev-week'),
         nextWeekBtn: document.getElementById('next-week'),
@@ -59,11 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
         grayPastDays: document.getElementById('gray-past-days'),
         feedbackText: document.getElementById('feedback-text'),
         feedbackEmail: document.getElementById('feedback-email'),
-        sendFeedbackBtn: document.getElementById('send-feedback')
+        sendFeedbackBtn: document.getElementById('send-feedback'),
+        weekdayLabels: document.querySelector('.weekday-labels'),
+        numDaysInput: document.getElementById('num-days'),
+        timeIncrement: document.getElementById('time-increment'),
+        primaryColor: document.getElementById('primary-color'),
+        freeColor: document.getElementById('free-color'),
+        busyColor: document.getElementById('busy-color')
     };
 
     const ctx = elements.canvas.getContext('2d');
-    let currentDate = new Date('2025-01-08T21:34:33-05:00');
+    let currentDate = new Date();
     let isMouseDown = false;
     let isSelecting = null;
 
@@ -135,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function isPastDay(dayIndex) {
-        const today = new Date('2025-01-08T22:12:34-05:00');
+        const today = new Date();
         const monday = new Date(currentDate);
         monday.setDate(monday.getDate() - (monday.getDay() || 7) + 1);
         const dayDate = new Date(monday);
@@ -148,16 +154,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return dayDate < today;
     }
 
+    function applyColors() {
+        document.documentElement.style.setProperty('--primary-color', calendarConfig.style.colors.header);
+        document.documentElement.style.setProperty('--secondary-color', calendarConfig.style.colors.free);
+        document.querySelectorAll('.time-cell.selected').forEach(cell => {
+            cell.style.backgroundColor = elements.modeSwitch.checked ? calendarConfig.style.colors.busy : calendarConfig.style.colors.free;
+        });
+        if (elements.canvas.width > 0) {
+            generateCalendarImage();
+        }
+    }
+
+    function updateEnabledDays(num) {
+        calendarConfig.days.forEach((d, i) => { d.enabled = i < num; });
+    }
+
     // Create calendar grid
     function createCalendarGrid() {
         elements.timeLabels.innerHTML = '';
         elements.timeGrid.innerHTML = '';
+        elements.weekdayLabels.innerHTML = '';
 
         const startHour = parseInt(elements.startTimeSelect.value);
         const endHour = parseInt(elements.endTimeSelect.value);
         const { intervalsPerHour } = calendarConfig.timeSlots;
         const totalIntervals = (endHour - startHour) * intervalsPerHour;
         const enabledDays = getEnabledDays();
+
+        const rowHeight = 60 / intervalsPerHour;
+        elements.timeGrid.style.gridTemplateColumns = `repeat(${enabledDays.length}, 1fr)`;
+        elements.weekdayLabels.style.gridTemplateColumns = `repeat(${enabledDays.length}, 1fr)`;
+        elements.timeGrid.style.gridAutoRows = `${rowHeight}px`;
+        elements.timeLabels.style.gridTemplateRows = `repeat(${totalIntervals}, ${rowHeight}px)`;
+
+        enabledDays.forEach(day => {
+            const label = document.createElement('div');
+            label.className = 'weekday';
+            label.textContent = day.name;
+            elements.weekdayLabels.appendChild(label);
+        });
 
         // Create time labels
         for (let hour = startHour; hour <= endHour; hour++) {
@@ -184,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.className = 'time-cell';
                 cell.dataset.day = day.name;
                 cell.dataset.interval = interval;
-                cell.dataset.hour = Math.floor(interval / 4) + startHour;
-                cell.dataset.minute = (interval % 4) * 15;
+                cell.dataset.hour = Math.floor(interval / intervalsPerHour) + startHour;
+                cell.dataset.minute = (interval % intervalsPerHour) * (60 / intervalsPerHour);
                 elements.timeGrid.appendChild(cell);
             }
         }
@@ -198,8 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const startHour = parseInt(elements.startTimeSelect.value);
         const endHour = parseInt(elements.endTimeSelect.value);
-        const totalIntervals = (endHour - startHour) * 4;
-        const enabledDays = getEnabledDays(true);  
+        const { intervalsPerHour } = calendarConfig.timeSlots;
+        const totalIntervals = (endHour - startHour) * intervalsPerHour;
+        const enabledDays = getEnabledDays(true);
         const style = calendarConfig.style;
         const isBusyMode = elements.modeSwitch.checked;
         const shouldGrayPastDays = elements.grayPastDays.checked;
@@ -239,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let hour = startHour; hour <= endHour; hour++) {
             if (hour < endHour || hour === startHour) {
-                const y = style.headerHeight + ((hour - startHour) * 4 * style.cellHeight);
+                const y = style.headerHeight + ((hour - startHour) * intervalsPerHour * style.cellHeight);
                 ctx.fillText(formatHour(hour), style.timeWidth - 10, y);
             }
         }
@@ -260,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Horizontal lines
         for (let i = 0; i <= totalIntervals; i++) {
             ctx.beginPath();
-            ctx.lineWidth = i % 4 === 0 ? 1.5 : 0.5;
+            ctx.lineWidth = i % intervalsPerHour === 0 ? 1.5 : 0.5;
             const y = style.headerHeight + (i * style.cellHeight);
             ctx.moveTo(style.timeWidth, y);
             ctx.lineTo(width, y);
@@ -288,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const hour = parseInt(cell.dataset.hour);
             const minute = parseInt(cell.dataset.minute);
             const x = style.timeWidth + (dayIndex * style.cellSize);
-            const y = style.headerHeight + ((hour - startHour) * 4 + (minute / 15)) * style.cellHeight;
+            const y = style.headerHeight + ((hour - startHour) * intervalsPerHour + (minute / (60 / intervalsPerHour))) * style.cellHeight;
 
             // Only draw selection if it's not a past day or if past days are not being grayed out
             if (!shouldGrayPastDays || !isPastDay(calendarConfig.days.findIndex(d => d.name === dayName))) {
@@ -309,17 +345,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWeekDisplay();
     });
 
-    elements.updateRangeBtn.addEventListener('click', () => {
-        const startHour = parseInt(elements.startTimeSelect.value);
-        const endHour = parseInt(elements.endTimeSelect.value);
-
-        if (startHour >= endHour) {
-            alert('End time must be after start time!');
-            return;
-        }
-
+    elements.resetBtn.addEventListener('click', () => {
+        currentDate = new Date();
+        elements.startTimeSelect.value = calendarConfig.timeSlots.defaultStart;
+        elements.endTimeSelect.value = calendarConfig.timeSlots.defaultEnd;
+        elements.numDaysInput.value = calendarConfig.days.length;
+        updateEnabledDays(calendarConfig.days.length);
+        elements.timeIncrement.value = calendarConfig.timeSlots.intervalsPerHour;
+        elements.primaryColor.value = calendarConfig.style.colors.header;
+        elements.freeColor.value = calendarConfig.style.colors.free;
+        elements.busyColor.value = calendarConfig.style.colors.busy;
+        elements.modeSwitch.checked = false;
+        elements.modeLabel.textContent = 'Free Times';
+        elements.showWeekends.checked = true;
+        elements.grayPastDays.checked = true;
+        applyColors();
         createCalendarGrid();
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+        updateWeekDisplay();
     });
 
     elements.timeGrid.addEventListener('mousedown', (e) => {
@@ -438,6 +481,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    elements.numDaysInput.addEventListener('change', () => {
+        const num = Math.min(7, Math.max(1, parseInt(elements.numDaysInput.value)));
+        elements.numDaysInput.value = num;
+        updateEnabledDays(num);
+        createCalendarGrid();
+        ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+    });
+
+    elements.timeIncrement.addEventListener('change', () => {
+        calendarConfig.timeSlots.intervalsPerHour = parseInt(elements.timeIncrement.value);
+        calendarConfig.style.cellHeight = 10 * (4 / calendarConfig.timeSlots.intervalsPerHour);
+        createCalendarGrid();
+        ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+    });
+
+    function updateColorConfig() {
+        calendarConfig.style.colors.header = elements.primaryColor.value;
+        calendarConfig.style.colors.free = elements.freeColor.value;
+        calendarConfig.style.colors.busy = elements.busyColor.value;
+        applyColors();
+    }
+
+    elements.primaryColor.addEventListener('input', updateColorConfig);
+    elements.freeColor.addEventListener('input', updateColorConfig);
+    elements.busyColor.addEventListener('input', updateColorConfig);
+
     elements.grayPastDays.addEventListener('change', () => {
         if (elements.canvas.width > 0) {
             generateCalendarImage();
@@ -456,4 +525,5 @@ document.addEventListener('DOMContentLoaded', () => {
     createCalendarGrid();
     updateWeekDisplay();
     elements.datePicker.value = formatDateForPicker(currentDate);
+    applyColors();
 });
