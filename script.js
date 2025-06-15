@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cellHeight: 10,
             headerHeight: 60,
             timeWidth: 80,
+            borderRadius: 12,
             colors: {
                 header: '#FF69B4',
                 free: '#4CAF50',
@@ -71,6 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const ctx = elements.canvas.getContext('2d');
+    // Sync border radius with CSS variable if present
+    const cssRadius = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--border-radius'));
+    if (!isNaN(cssRadius)) {
+        calendarConfig.style.borderRadius = cssRadius;
+    }
     let currentDate = new Date();
     let isMouseDown = false;
     let isSelecting = null;
@@ -264,6 +270,25 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.canvas.width = width;
         elements.canvas.height = height;
 
+        ctx.clearRect(0, 0, width, height);
+
+        const radius = style.borderRadius;
+
+        // Clip to rounded rectangle so corners stay transparent when exported
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(radius, 0);
+        ctx.lineTo(width - radius, 0);
+        ctx.arcTo(width, 0, width, radius, radius);
+        ctx.lineTo(width, height - radius);
+        ctx.arcTo(width, height, width - radius, height, radius);
+        ctx.lineTo(radius, height);
+        ctx.arcTo(0, height, 0, height - radius, radius);
+        ctx.lineTo(0, radius);
+        ctx.arcTo(0, 0, radius, 0, radius);
+        ctx.closePath();
+        ctx.clip();
+
         // Clear canvas
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
@@ -350,6 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillRect(x, y, style.cellSize, style.cellHeight);
             }
         });
+
+        ctx.restore();
     }
 
     // Event Listeners
