@@ -1,14 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Calendar Configuration
     const calendarConfig = {
+        startDay: 1, // 0 = Sunday, 1 = Monday, ...
         days: [
-            { name: 'Mon', enabled: true },
-            { name: 'Tue', enabled: true },
-            { name: 'Wed', enabled: true },
-            { name: 'Thu', enabled: true },
-            { name: 'Fri', enabled: true },
-            { name: 'Sat', enabled: true },
-            { name: 'Sun', enabled: true }
+            { name: 'Mon', jsIndex: 1, enabled: true },
+            { name: 'Tue', jsIndex: 2, enabled: true },
+            { name: 'Wed', jsIndex: 3, enabled: true },
+            { name: 'Thu', jsIndex: 4, enabled: true },
+            { name: 'Fri', jsIndex: 5, enabled: true },
+            { name: 'Sat', jsIndex: 6, enabled: true },
+            { name: 'Sun', jsIndex: 0, enabled: true }
         ],
         timeSlots: {
             intervalsPerHour: 4,
@@ -65,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
         timeIncrement: document.getElementById('time-increment'),
         primaryColor: document.getElementById('primary-color'),
         freeColor: document.getElementById('free-color'),
-        busyColor: document.getElementById('busy-color')
+        busyColor: document.getElementById('busy-color'),
+        weekStart: document.getElementById('week-start')
     };
 
     const ctx = elements.canvas.getContext('2d');
@@ -81,28 +83,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${hour12}:00${ampm}`;
     }
 
+    function isWeekend(jsIndex) {
+        return jsIndex === 0 || jsIndex === 6;
+    }
+
+    function getOrderedDays() {
+        const startIndex = calendarConfig.days.findIndex(d => d.jsIndex === calendarConfig.startDay);
+        return calendarConfig.days.slice(startIndex).concat(calendarConfig.days.slice(0, startIndex));
+    }
+
     function getEnabledDays(forImage = false) {
+        const ordered = getOrderedDays();
         if (forImage) {
             const showWeekends = elements.showWeekends.checked;
-            return calendarConfig.days.filter((day, index) => {
-                const isWeekend = index >= 5; 
-                return day.enabled && (showWeekends || !isWeekend);
-            });
+            return ordered.filter(day => day.enabled && (showWeekends || !isWeekend(day.jsIndex)));
         }
-        return calendarConfig.days.filter(day => day.enabled);
+        return ordered.filter(day => day.enabled);
+    }
+
+    function getWeekStartDate() {
+        const start = new Date(currentDate);
+        const diff = (start.getDay() - calendarConfig.startDay + 7) % 7;
+        start.setDate(start.getDate() - diff);
+        return start;
     }
 
     function getWeekDates() {
-        const monday = new Date(currentDate);
-        monday.setDate(monday.getDate() - (monday.getDay() || 7) + 1);
-        const friday = new Date(monday);
-        friday.setDate(friday.getDate() + 6);
-        
+        const start = getWeekStartDate();
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+
         const formatDate = (date) => {
             return `${date.getMonth() + 1}/${date.getDate()}`;
         };
-        
-        return `${formatDate(monday)}-${formatDate(friday)}`;
+
+        return `${formatDate(start)}-${formatDate(end)}`;
     }
 
     function getCalendarTitle() {
@@ -142,15 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isPastDay(dayIndex) {
         const today = new Date();
-        const monday = new Date(currentDate);
-        monday.setDate(monday.getDate() - (monday.getDay() || 7) + 1);
-        const dayDate = new Date(monday);
-        dayDate.setDate(dayDate.getDate() + dayIndex);
-        
+        const weekStart = getWeekStartDate();
+        const jsIndex = calendarConfig.days[dayIndex].jsIndex;
+        const offset = (jsIndex - calendarConfig.startDay + 7) % 7;
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(dayDate.getDate() + offset);
+
         // Set both dates to midnight to compare full days
         today.setHours(0, 0, 0, 0);
         dayDate.setHours(0, 0, 0, 0);
-        
+
         return dayDate < today;
     }
 
@@ -166,7 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateEnabledDays(num) {
-        calendarConfig.days.forEach((d, i) => { d.enabled = i < num; });
+        calendarConfig.days.forEach(d => { d.enabled = false; });
+        const ordered = getOrderedDays();
+        ordered.slice(0, num).forEach(d => { d.enabled = true; });
     }
 
     // Create calendar grid
@@ -355,6 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.primaryColor.value = calendarConfig.style.colors.header;
         elements.freeColor.value = calendarConfig.style.colors.free;
         elements.busyColor.value = calendarConfig.style.colors.busy;
+        calendarConfig.startDay = 1;
+        elements.weekStart.value = calendarConfig.startDay;
         elements.modeSwitch.checked = false;
         elements.modeLabel.textContent = 'Free Times';
         elements.showWeekends.checked = true;
@@ -496,6 +516,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
     });
 
+    elements.weekStart.addEventListener('change', () => {
+        calendarConfig.startDay = parseInt(elements.weekStart.value);
+        updateEnabledDays(parseInt(elements.numDaysInput.value));
+        createCalendarGrid();
+        ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+        updateWeekDisplay();
+    });
+
     function updateColorConfig() {
         calendarConfig.style.colors.header = elements.primaryColor.value;
         calendarConfig.style.colors.free = elements.freeColor.value;
@@ -524,6 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeTimeSelectors();
     createCalendarGrid();
     updateWeekDisplay();
+    elements.weekStart.value = calendarConfig.startDay;
     elements.datePicker.value = formatDateForPicker(currentDate);
     applyColors();
 });
