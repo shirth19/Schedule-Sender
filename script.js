@@ -516,13 +516,23 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
     });
 
-    elements.weekStart.addEventListener('change', () => {
-        calendarConfig.startDay = parseInt(elements.weekStart.value);
+    function handleWeekStartChange() {
+        const oldStart = calendarConfig.startDay;
+        const newStart = parseInt(elements.weekStart.value);
+        if (newStart === oldStart) return;
+        // Adjust currentDate so the same range of days stays visible
+        const diff = newStart - oldStart;
+        currentDate.setDate(currentDate.getDate() + diff);
+
+        calendarConfig.startDay = newStart;
         updateEnabledDays(parseInt(elements.numDaysInput.value));
         createCalendarGrid();
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
         updateWeekDisplay();
-    });
+    }
+
+    elements.weekStart.addEventListener('change', handleWeekStartChange);
+    elements.weekStart.addEventListener('input', handleWeekStartChange);
 
     function updateColorConfig() {
         calendarConfig.style.colors.header = elements.primaryColor.value;
