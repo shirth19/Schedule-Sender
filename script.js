@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas: document.getElementById('calendar-canvas'),
         startTimeSelect: document.getElementById('start-time'),
         endTimeSelect: document.getElementById('end-time'),
-        updateRangeBtn: document.getElementById('update-range'),
+        resetBtn: document.getElementById('reset-all'),
         weekRange: document.getElementById('week-range'),
         prevWeekBtn: document.getElementById('prev-week'),
         nextWeekBtn: document.getElementById('next-week'),
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const ctx = elements.canvas.getContext('2d');
-    let currentDate = new Date('2025-01-08T21:34:33-05:00');
+    let currentDate = new Date();
     let isMouseDown = false;
     let isSelecting = null;
 
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function isPastDay(dayIndex) {
-        const today = new Date('2025-01-08T22:12:34-05:00');
+        const today = new Date();
         const monday = new Date(currentDate);
         monday.setDate(monday.getDate() - (monday.getDay() || 7) + 1);
         const dayDate = new Date(monday);
@@ -345,17 +345,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWeekDisplay();
     });
 
-    elements.updateRangeBtn.addEventListener('click', () => {
-        const startHour = parseInt(elements.startTimeSelect.value);
-        const endHour = parseInt(elements.endTimeSelect.value);
-
-        if (startHour >= endHour) {
-            alert('End time must be after start time!');
-            return;
-        }
-
+    elements.resetBtn.addEventListener('click', () => {
+        currentDate = new Date();
+        elements.startTimeSelect.value = calendarConfig.timeSlots.defaultStart;
+        elements.endTimeSelect.value = calendarConfig.timeSlots.defaultEnd;
+        elements.numDaysInput.value = calendarConfig.days.length;
+        updateEnabledDays(calendarConfig.days.length);
+        elements.timeIncrement.value = calendarConfig.timeSlots.intervalsPerHour;
+        elements.primaryColor.value = calendarConfig.style.colors.header;
+        elements.freeColor.value = calendarConfig.style.colors.free;
+        elements.busyColor.value = calendarConfig.style.colors.busy;
+        elements.modeSwitch.checked = false;
+        elements.modeLabel.textContent = 'Free Times';
+        elements.showWeekends.checked = true;
+        elements.grayPastDays.checked = true;
+        applyColors();
         createCalendarGrid();
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+        updateWeekDisplay();
     });
 
     elements.timeGrid.addEventListener('mousedown', (e) => {

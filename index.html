@@ -27,7 +27,33 @@
                 </label>
                 <span id="mode-label">Free Times</span>
             </div>
-            <button id="update-range" class="secondary-btn">Update Time Range</button>
+            <button id="reset-all" class="secondary-btn">Reset All</button>
+        </div>
+        <div class="extra-settings">
+            <div class="setting">
+                <label for="num-days">Days to Show:</label>
+                <input type="number" id="num-days" min="1" max="7" value="7">
+            </div>
+            <div class="setting">
+                <label for="time-increment">Time Increment:</label>
+                <select id="time-increment">
+                    <option value="1">60 min</option>
+                    <option value="2">30 min</option>
+                    <option value="4" selected>15 min</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="primary-color">Header Color:</label>
+                <input type="color" id="primary-color" value="#FF69B4">
+            </div>
+            <div class="setting">
+                <label for="free-color">Free Slot Color:</label>
+                <input type="color" id="free-color" value="#4CAF50">
+            </div>
+            <div class="setting">
+                <label for="busy-color">Busy Slot Color:</label>
+                <input type="color" id="busy-color" value="#FF4444">
+            </div>
         </div>
         <div class="extra-settings">
             <div class="setting">

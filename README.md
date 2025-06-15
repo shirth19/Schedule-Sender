@@ -11,6 +11,9 @@ A simple, elegant web application for creating and sharing weekly schedules. Per
 - Adjustable number of days displayed
 - Customizable time increments
 - Change header and selection colors
+- Reset all settings with one click
+
+main
 - Easy sharing via image download or clipboard copy
 - Feedback submission system
 
@@ -23,6 +26,9 @@ A simple, elegant web application for creating and sharing weekly schedules. Per
 5. Use the checkboxes to customize the display (show/hide weekends, gray out past days)
 6. Click "Generate Calendar" to create your schedule image
 7. Use "Copy to Clipboard" or "Download" to share your schedule
+8. Click "Reset All" to restore default settings
+
+main
 
 ## Live Demo
 
