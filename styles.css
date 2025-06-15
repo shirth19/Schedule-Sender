@@ -246,6 +246,36 @@ h1 {
     border-color: var(--secondary-color);
 }
 
+.extra-settings {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.setting {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setting input,
+.setting select {
+    padding: 0.5rem;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    background: white;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.setting input:focus,
+.setting select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+}
+
 .date-selector {
     display: flex;
     flex-direction: column;
